@@ -7758,7 +7758,16 @@ u8 GetLedgeJumpDirection(s16 x, s16 y, u8 z)
     direction--;
     behavior = MapGridGetMetatileBehaviorAt(x, y);
 
-    if (sLedgeJumpBehaviors[direction](behavior) || MetatileBehavior_IsOmnidirectionalJump(behavior))
+    if (FlagGet(FLAG_OMNIJUMP_BOOTS_UPGRADE))
+    {
+        u8 i;
+        for(i=0; i<4; i++)
+        {
+            if(sLedgeJumpBehaviors[i](behavior))
+                return direction + 1;
+        }  
+    }
+    else if (sLedgeJumpBehaviors[direction](behavior) || MetatileBehavior_IsOmnidirectionalJump(behavior))
         return direction + 1;
 
     return DIR_NONE;
