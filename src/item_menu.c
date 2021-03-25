@@ -161,6 +161,7 @@ static void ItemMenu_SortByName(u8 taskId);
 static void ItemMenu_SortByType(u8 taskId);
 static void ItemMenu_SortByAmount(u8 taskId);
 static void ItemMenu_SortByNumber(u8 taskId);
+static void ItemMenu_SortByMoveName(u8 taskId);
 static void SortBagItems(u8 taskId);
 static void Task_SortFinish(u8 taskId);
 static void SortItemsInBag(u8 pocket, u8 type);
@@ -170,6 +171,7 @@ static s8 CompareItemsAlphabetically(struct ItemSlot* itemSlot1, struct ItemSlot
 static s8 CompareItemsByMost(struct ItemSlot* itemSlot1, struct ItemSlot* itemSlot2);
 static s8 CompareItemsByType(struct ItemSlot* itemSlot1, struct ItemSlot* itemSlot2);
 static s8 CompareItemsById(struct ItemSlot* itemSlot1, struct ItemSlot* itemSlot2);
+static s8 CompareTMsAndHMsMovesAlphabetically(struct ItemSlot* itemSlot1, struct ItemSlot* itemSlot2);
 
 // .rodata
 
@@ -230,6 +232,7 @@ static const u8 sMenuText_ByName[] = _("Name");
 static const u8 sMenuText_ByType[] = _("Type");
 static const u8 sMenuText_ByAmount[] = _("Amount");
 static const u8 sMenuText_ByNumber[] = _("Number");
+static const u8 sMenuText_ByMovesNames[] = _("Move Name");
 static const u8 sText_NothingToSort[] = _("There's nothing to sort!");
 static const struct MenuAction sItemMenuActions[] = {
     [ITEMMENUACTION_USE] =          {gMenuText_Use, ItemMenu_UseOutOfBattle},
@@ -250,6 +253,7 @@ static const struct MenuAction sItemMenuActions[] = {
     [ITEMMENUACTION_BY_TYPE] =      {sMenuText_ByType, ItemMenu_SortByType},
     [ITEMMENUACTION_BY_AMOUNT] =    {sMenuText_ByAmount, ItemMenu_SortByAmount},
     [ITEMMENUACTION_BY_NUMBER] =    {sMenuText_ByNumber, ItemMenu_SortByNumber},
+    [ITEMMENUACTION_BY_MOVE_NAME] = {sMenuText_ByMovesNames, ItemMenu_SortByMoveName},
     [ITEMMENUACTION_DUMMY] =        {gText_EmptyString2, NULL}
 };
 
@@ -2560,6 +2564,7 @@ enum BagSortOptions
     SORT_BY_TYPE,
     SORT_BY_AMOUNT, //greatest->least
     SORT_BY_NUMBER, //by itemID
+    SORT_BY_MOVE_NAME,  //for TMs and HMs
 };
 enum ItemSortType
 {
@@ -2594,6 +2599,7 @@ static const u8 sText_Name[] = _("name");
 static const u8 sText_Type[] = _("type");
 static const u8 sText_Amount[] = _("amount");
 static const u8 sText_Number[] = _("number");
+static const u8 sText_MoveName[] = _("moves' names");
 static const u8 sText_ItemsSorted[] = _("Items sorted by {STR_VAR_1}!");
 static const u8 *const sSortTypeStrings[] = 
 {
@@ -2601,6 +2607,7 @@ static const u8 *const sSortTypeStrings[] =
     [SORT_BY_TYPE] = sText_Type,
     [SORT_BY_AMOUNT] = sText_Amount,
     [SORT_BY_NUMBER] = sText_Number,
+    [SORT_BY_MOVE_NAME] = sText_MoveName,
 };
 
 static const u8 sBagMenuSortItems[] =
@@ -2625,7 +2632,15 @@ static const u8 sBagMenuSortPokeBalls[] =
     ITEMMENUACTION_CANCEL,
 };
 
-static const u8 sBagMenuSortTMBerries[] =
+static const u8 sBagMenuSortTMsAndHMs[] =
+{
+    ITEMMENUACTION_BY_MOVE_NAME,
+    ITEMMENUACTION_BY_AMOUNT,
+    ITEMMENUACTION_BY_NUMBER,
+    ITEMMENUACTION_CANCEL,
+};
+
+static const u8 sBagMenuSortBerries[] =
 {
     ITEMMENUACTION_BY_NAME,
     ITEMMENUACTION_BY_AMOUNT,
@@ -3089,10 +3104,14 @@ static void AddBagSortSubMenu(void)
             gBagMenu->contextMenuNumItems = NELEMS(sBagMenuSortPokeBalls);
             break;
         case POCKET_BERRIES:
+            gBagMenu->contextMenuItemsPtr = sBagMenuSortBerries;
+            memcpy(&gBagMenu->contextMenuItemsBuffer, &sBagMenuSortBerries, NELEMS(sBagMenuSortBerries));
+            gBagMenu->contextMenuNumItems = NELEMS(sBagMenuSortBerries);
+            break;
         case POCKET_TM_HM:
-            gBagMenu->contextMenuItemsPtr = sBagMenuSortTMBerries;
-            memcpy(&gBagMenu->contextMenuItemsBuffer, &sBagMenuSortTMBerries, NELEMS(sBagMenuSortTMBerries));
-            gBagMenu->contextMenuNumItems = NELEMS(sBagMenuSortTMBerries);
+            gBagMenu->contextMenuItemsPtr = sBagMenuSortTMsAndHMs;
+            memcpy(&gBagMenu->contextMenuItemsBuffer, &sBagMenuSortTMsAndHMs, NELEMS(sBagMenuSortTMsAndHMs));
+            gBagMenu->contextMenuNumItems = NELEMS(sBagMenuSortTMsAndHMs);
             break;
         default:
             gBagMenu->contextMenuItemsPtr = sBagMenuSortItems;
@@ -3142,6 +3161,13 @@ static void ItemMenu_SortByNumber(u8 taskId)
 {
     gTasks[taskId].tSortType = SORT_BY_NUMBER; //by itemID
     StringCopy(gStringVar1, sSortTypeStrings[SORT_BY_NUMBER]);
+    gTasks[taskId].func = SortBagItems;
+}
+
+static void ItemMenu_SortByMoveName(u8 taskId)
+{
+    gTasks[taskId].tSortType = SORT_BY_MOVE_NAME;
+    StringCopy(gStringVar1, sSortTypeStrings[SORT_BY_MOVE_NAME]);
     gTasks[taskId].func = SortBagItems;
 }
 
@@ -3218,6 +3244,9 @@ static void SortItemsInBag(u8 pocket, u8 type)
         break;
     case SORT_BY_NUMBER:
         MergeSort(itemMem, 0, itemAmount - 1, CompareItemsById);
+        break;
+    case SORT_BY_MOVE_NAME:
+        MergeSort(itemMem, 0, itemAmount - 1, CompareTMsAndHMsMovesAlphabetically);
         break;
     default:
         MergeSort(itemMem, 0, itemAmount - 1, CompareItemsByType);
@@ -3340,4 +3369,38 @@ static s8 CompareItemsByType(struct ItemSlot* itemSlot1, struct ItemSlot* itemSl
         return 1;
 
     return CompareItemsAlphabetically(itemSlot1, itemSlot2); //Items are of same type so sort alphabetically
+}
+
+static s8 CompareTMsAndHMsMovesAlphabetically(struct ItemSlot* itemSlot1, struct ItemSlot* itemSlot2)
+{
+    u16 item1 = itemSlot1->itemId;
+    u16 item2 = itemSlot2->itemId;
+    int i;
+    const u8 *name1;
+    const u8 *name2;
+
+    if (item1 == ITEM_NONE)
+        return 1;
+    else if (item2 == ITEM_NONE)
+        return -1;
+
+    name1 = gMoveNames[ItemIdToBattleMoveId(item1)];
+    name2 = gMoveNames[ItemIdToBattleMoveId(item2)];
+
+    for (i = 0; ; ++i)
+    {
+        if (name1[i] == EOS && name2[i] != EOS)
+            return -1;
+        else if (name1[i] != EOS && name2[i] == EOS)
+            return 1;
+        else if (name1[i] == EOS && name2[i] == EOS)
+            return 0;
+
+        if (name1[i] < name2[i])
+            return -1;
+        else if (name1[i] > name2[i])
+            return 1;
+    }
+
+    return 0; //Will never be reached
 }

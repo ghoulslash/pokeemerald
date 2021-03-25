@@ -36,7 +36,8 @@
 #define ITEMMENUACTION_BY_TYPE      15
 #define ITEMMENUACTION_BY_AMOUNT    16
 #define ITEMMENUACTION_BY_NUMBER    17
-#define ITEMMENUACTION_DUMMY        18
+#define ITEMMENUACTION_BY_MOVE_NAME 18
+#define ITEMMENUACTION_DUMMY        19
 
 // Exported type declarations
 struct BagStruct
