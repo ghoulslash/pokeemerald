@@ -2301,6 +2301,9 @@ bool8 ObjectMovingOnRockStairs(struct ObjectEvent *objectEvent, u8 direction)
                 return FALSE;
         #endif
         
+        if (objectEvent->localId == OBJ_EVENT_ID_CAMERA)
+            return FALSE;
+    
         switch (direction)
         {
         case DIR_NORTH:
