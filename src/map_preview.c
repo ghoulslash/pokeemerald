@@ -520,14 +520,14 @@ static u16 MapPreview_CreateMapNameWindow(u8 mapsec)
 {
     u16 windowId;
     u32 xctr;
-    u8 color[0];
+    u8 color[3];
 
     windowId = AddWindow(&sMapNameWindow);
     FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
     PutWindowTilemap(windowId);
-    color[0] = TEXT_COLOR_WHITE; // Access violation
-    color[1] = TEXT_COLOR_RED; // Access violation
-    color[2] = TEXT_COLOR_LIGHT_GRAY; // Access violation
+    color[0] = TEXT_COLOR_WHITE;
+    color[1] = TEXT_COLOR_RED;
+    color[2] = TEXT_COLOR_LIGHT_GRAY;
     GetMapName(gStringVar4, mapsec, 0);
     xctr = 104 - GetStringWidth(2, gStringVar4, 0);
     AddTextPrinterParameterized4(windowId, 2, xctr / 2, 2, 0, 0, color/* Access violation */, -1, gStringVar4);
