@@ -500,7 +500,7 @@ void MapPreview_StartForestTransition(u8 mapsec)
     taskId = CreateTask(Task_RunMapPreviewScreenForest, 0);
     gTasks[taskId].data[2] = GetBgAttribute(0, BG_ATTR_PRIORITY);
     gTasks[taskId].data[4] = GetGpuReg(REG_OFFSET_BLDCNT);
-    gTasks[taskId].data[5] = GetGpuReg(REG_OFFSET_BLDALPHA);
+    gTasks[taskId].data[5] = GetGpuReg(REG_OFFSET_BLDALPHA); // now unused
     gTasks[taskId].data[3] = GetGpuReg(REG_OFFSET_DISPCNT);
     gTasks[taskId].data[6] = GetGpuReg(REG_OFFSET_WININ);
     gTasks[taskId].data[7] = GetGpuReg(REG_OFFSET_WINOUT);
@@ -569,6 +569,7 @@ static void Task_RunMapPreviewScreenForest(u8 taskId)
         }
         break;
     case 2:
+        SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(16, 0));
         if (IsWeatherNotFadingIn())
         {
             Overworld_PlaySpecialMapMusic();
@@ -576,6 +577,7 @@ static void Task_RunMapPreviewScreenForest(u8 taskId)
         }
         break;
     case 3:
+        SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(16, 0));
         data[1]++;
         if (data[1] > data[10])
         {
@@ -617,7 +619,8 @@ static void Task_RunMapPreviewScreenForest(u8 taskId)
             SetBgAttribute(0, BG_ATTR_PRIORITY, data[2]);
             SetGpuReg(REG_OFFSET_DISPCNT, data[3]);
             SetGpuReg(REG_OFFSET_BLDCNT, data[4]);
-            SetGpuReg(REG_OFFSET_BLDALPHA, data[5]);
+            // Restore current weather's requested blend settings
+            SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(gWeatherPtr->currBlendEVA, gWeatherPtr->currBlendEVB));
             SetGpuReg(REG_OFFSET_WININ, data[6]);
             SetGpuReg(REG_OFFSET_WINOUT, data[7]);
             DestroyTask(taskId);
