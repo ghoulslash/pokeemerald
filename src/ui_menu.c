@@ -270,16 +270,19 @@ static void Menu_FadeAndBail(void)
 
 static bool8 Menu_InitBgs(void)
 {
-    ResetAllBgsCoordinates();
-    sBg1TilemapBuffer = Alloc(0x800);
+    ResetAllBgsCoordinatesAndBgCntRegs();
+    sBg1TilemapBuffer = AllocZeroed(BG_SCREEN_SIZE);
     if (sBg1TilemapBuffer == NULL)
         return FALSE;
     
-    memset(sBg1TilemapBuffer, 0, 0x800);
     ResetBgsAndClearDma3BusyFlags(0);
     InitBgsFromTemplates(0, sMenuBgTemplates, NELEMS(sMenuBgTemplates));
     SetBgTilemapBuffer(1, sBg1TilemapBuffer);
     ScheduleBgCopyTilemapToVram(1);
+    ScheduleBgCopyTilemapToVram(2);
+    
+    SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_1D_MAP | DISPCNT_OBJ_ON);
+    SetGpuReg(REG_OFFSET_BLDCNT, 0);
     ShowBg(0);
     ShowBg(1);
     ShowBg(2);
