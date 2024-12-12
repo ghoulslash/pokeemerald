@@ -986,6 +986,10 @@ bool32 ShouldSwitch(u32 battler)
             return FALSE;
     }
 
+    // Custom/Dynamic Switching Logic takes precedence
+    if (gDynamicAiSwitchFunc != NULL && gDynamicAiSwitchFunc(battler))
+        return TRUE;
+    
     // NOTE: The sequence of the below functions matter! Do not change unless you have carefully considered the outcome.
     // Since the order is sequencial, and some of these functions prompt switch to specific party members.
 

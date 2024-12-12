@@ -40,7 +40,8 @@ static bool32 IsPinchBerryItemEffect(u32 holdEffect);
 // ewram
 EWRAM_DATA const u8 *gAIScriptPtr = NULL;   // Still used in contests
 EWRAM_DATA u8 sBattler_AI = 0;
-EWRAM_DATA AiScoreFunc sDynamicAiFunc = NULL;
+EWRAM_DATA static AiScoreFunc sDynamicAiFunc = NULL;
+EWRAM_DATA AiSwitchFunc gDynamicAiSwitchFunc = NULL;
 
 // const rom data
 static s32 AI_CheckBadMove(u32 battlerAtk, u32 battlerDef, u32 move, s32 score);
@@ -5346,7 +5347,16 @@ void ScriptSetDynamicAiFunc(struct ScriptContext *ctx)
     sDynamicAiFunc = func;
 }
 
-void ResetDynamicAiFunc(void)
+void ScriptSetDynamicAiSwitchFunc(struct ScriptContext *ctx)
+{
+    AiSwitchFunc func = (AiSwitchFunc)ScriptReadWord(ctx);
+    gDynamicAiSwitchFunc = func;
+}
+
+void ResetDynamicAiFunctions(void)
 {
     sDynamicAiFunc = NULL;
+    gDynamicAiSwitchFunc = NULL;
 }
+
+
