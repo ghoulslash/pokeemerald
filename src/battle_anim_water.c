@@ -1462,12 +1462,14 @@ static void AnimTask_WaterSpoutRain_Step(u8 taskId)
                 gTasks[taskId2].func(taskId2);
                 gAnimVisualTaskCount++;
             }
-            gBattleAnimArgs[0] = ANIM_DEF_PARTNER;
-            taskId2 = CreateTask(AnimTask_HorizontalShake, 80);
-            if (taskId2 != TASK_NONE)
-            {
-                gTasks[taskId2].func(taskId2);
-                gAnimVisualTaskCount++;
+            if (GetBattlerMoveTargetType(gBattleAnimAttacker, gAnimMoveIndex) & (MOVE_TARGET_BOTH | MOVE_TARGET_FOES_AND_ALLY)) {
+                gBattleAnimArgs[0] = ANIM_DEF_PARTNER;
+                taskId2 = CreateTask(AnimTask_HorizontalShake, 80);
+                if (taskId2 != TASK_NONE)
+                {
+                    gTasks[taskId2].func(taskId2);
+                    gAnimVisualTaskCount++;
+                }
             }
             task->data[13] = 1;
         }
