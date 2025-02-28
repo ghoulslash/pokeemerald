@@ -423,15 +423,6 @@ static inline s32 DmgRoll(s32 dmg)
 bool32 IsDamageMoveUnusable(u32 battlerAtk, u32 battlerDef, u32 move, u32 moveType)
 {
     struct AiLogicData *aiData = AI_DATA;
-    u32 battlerDefAbility;
-
-    if (DoesBattlerIgnoreAbilityChecks(battlerAtk, aiData->abilities[battlerAtk], move))
-        battlerDefAbility = ABILITY_NONE;
-    else
-        battlerDefAbility = aiData->abilities[battlerDef];
-
-    if (battlerDef == BATTLE_PARTNER(battlerAtk))
-        battlerDefAbility = aiData->abilities[battlerDef];
 
     if (gBattleStruct->battlerState[battlerDef].commandingDondozo)
         return TRUE;
@@ -470,7 +461,7 @@ bool32 IsDamageMoveUnusable(u32 battlerAtk, u32 battlerDef, u32 move, u32 moveTy
             return TRUE;
         break;
     case EFFECT_POLTERGEIST:
-        if (AI_DATA->items[battlerDef] == ITEM_NONE || gFieldStatuses & STATUS_FIELD_MAGIC_ROOM || battlerDefAbility == ABILITY_KLUTZ)
+        if (AI_DATA->items[battlerDef] == ITEM_NONE || !IsBattlerItemEnabled(battlerDef))
             return TRUE;
         break;
     case EFFECT_FIRST_TURN_ONLY:
@@ -4295,4 +4286,17 @@ bool32 HasLowAccuracyMove(u32 battlerAtk, u32 battlerDef)
             return TRUE;
     }
     return FALSE;
+}
+
+bool32 IsBattlerItemEnabled(u32 battler)
+{
+    if (AI_THINKING_STRUCT->aiFlags[battler] & AI_FLAG_NEGATE_UNAWARE)
+        return TRUE;
+    if (gFieldStatuses & STATUS_FIELD_MAGIC_ROOM)
+        return FALSE;
+    if (gStatuses3[battler] & STATUS3_EMBARGO)
+        return FALSE;
+    if (gBattleMons[battler].ability == ABILITY_KLUTZ && !(gStatuses3[battler] & STATUS3_GASTRO_ACID))
+        return FALSE;
+    return TRUE;
 }

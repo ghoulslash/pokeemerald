@@ -2349,9 +2349,7 @@ static s32 AI_CheckBadMove(u32 battlerAtk, u32 battlerDef, u32 move, s32 score)
             }
             break;
         case EFFECT_NATURAL_GIFT:
-            if (aiData->abilities[battlerAtk] == ABILITY_KLUTZ
-              || gFieldStatuses & STATUS_FIELD_MAGIC_ROOM
-              || GetPocketByItemId(gBattleMons[battlerAtk].item) != POCKET_BERRIES)
+            if (!IsBattlerItemEnabled(battlerAtk) || GetPocketByItemId(gBattleMons[battlerAtk].item) != POCKET_BERRIES)
                 ADJUST_SCORE(-10);
             break;
         case EFFECT_GRASSY_TERRAIN:
@@ -2458,8 +2456,7 @@ static s32 AI_CheckBadMove(u32 battlerAtk, u32 battlerDef, u32 move, s32 score)
             }
             break;
         case EFFECT_EMBARGO:
-            if (aiData->abilities[battlerDef] == ABILITY_KLUTZ
-              || gFieldStatuses & STATUS_FIELD_MAGIC_ROOM
+            if (!IsBattlerItemEnabled(battlerAtk)
               || gDisableStructs[battlerDef].embargoTimer != 0
               || PartnerMoveIsSameAsAttacker(BATTLE_PARTNER(battlerAtk), battlerDef, move, aiData->partnerMove))
                 ADJUST_SCORE(-10);
@@ -2706,7 +2703,7 @@ static s32 AI_CheckBadMove(u32 battlerAtk, u32 battlerDef, u32 move, s32 score)
     } // move effect checks
 
     // Choice items
-    if (HOLD_EFFECT_CHOICE(aiData->holdEffects[battlerAtk]) && gBattleMons[battlerAtk].ability != ABILITY_KLUTZ)
+    if (HOLD_EFFECT_CHOICE(aiData->holdEffects[battlerAtk]) && IsBattlerItemEnabled(battlerAtk))
     {
         // Don't use user-target moves ie. Swords Dance, with exceptions
         if ((moveTarget & MOVE_TARGET_USER)
@@ -3369,6 +3366,12 @@ static u32 AI_CalcMoveEffectScore(u32 battlerAtk, u32 battlerDef, u32 move)
         if (aiData->holdEffects[battlerAtk] == HOLD_EFFECT_BIG_ROOT && effectiveness >= UQ_4_12(1.0))
             ADJUST_SCORE(DECENT_EFFECT);
         break;
+    case EFFECT_DREAM_EATER:
+    case EFFECT_STRENGTH_SAP:
+    case EFFECT_AQUA_RING:
+        if (aiData->holdEffects[battlerAtk] == HOLD_EFFECT_BIG_ROOT)
+            ADJUST_SCORE(DECENT_EFFECT);
+        break;
     case EFFECT_EXPLOSION:
     case EFFECT_MEMENTO:
         if (AI_THINKING_STRUCT->aiFlags[battlerAtk] & AI_FLAG_WILL_SUICIDE && gBattleMons[battlerDef].statStages[STAT_EVASION] < 7)
@@ -3590,8 +3593,6 @@ static u32 AI_CalcMoveEffectScore(u32 battlerAtk, u32 battlerDef, u32 move)
     case EFFECT_MOONLIGHT:
         if (ShouldRecover(battlerAtk, battlerDef, move, 50))
             ADJUST_SCORE(GOOD_EFFECT);
-        if (aiData->holdEffects[battlerAtk] == HOLD_EFFECT_BIG_ROOT)
-            ADJUST_SCORE(DECENT_EFFECT);
         break;
     case EFFECT_TOXIC:
     case EFFECT_POISON:
@@ -3667,7 +3668,8 @@ static u32 AI_CalcMoveEffectScore(u32 battlerAtk, u32 battlerDef, u32 move)
           || aiData->abilities[battlerDef] == ABILITY_MAGIC_GUARD)
             break;
         ADJUST_SCORE(GOOD_EFFECT);
-        if (!HasDamagingMove(battlerDef) || IsBattlerTrapped(battlerDef, FALSE))
+        if (!HasDamagingMove(battlerDef) || IsBattlerTrapped(battlerDef, FALSE)
+            || aiData->holdEffects[battlerAtk] == HOLD_EFFECT_BIG_ROOT)
             ADJUST_SCORE(DECENT_EFFECT);
         break;
     case EFFECT_DO_NOTHING:
