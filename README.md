@@ -67,7 +67,7 @@ Also, *please follow the Pull Request template and feel free to discuss how the 
     - Fairy Type (configurable).
     - Physical/Special/Status Category (configurable).
     - New moves and abilities up to Scarlet and Violet.
-        - Custom Contest data up to SwSh, newer moves are WIP. ([source](https://pokemonurpg.com/info/contests/rse-move-list/))
+        - Custom Contest data up to SwSh, newer moves are WIP. ([source](https://web.archive.org/web/20240910012333/https://pokemonurpg.com/info/contests/rse-move-list/))
     - Battle gimmick support:
         - Mega Evolution
         - Primal Reversion
