@@ -556,7 +556,7 @@ SINGLE_BATTLE_TEST("Pursuit becomes a locked move after being used on switch-out
 {
     GIVEN {
         ASSUME(gItemsInfo[ITEM_CHOICE_BAND].holdEffect == HOLD_EFFECT_CHOICE_BAND);
-        PLAYER(SPECIES_WOBBUFFET) { Item(ITEM_CHOICE_BAND); MovesWithPP({MOVE_PURSUIT, 1}, {MOVE_CELEBRATE, 10}, {MOVE_WATER_GUN, 10}, {MOVE_TACKLE, 10}); }
+        PLAYER(SPECIES_WOBBUFFET) { Item(ITEM_CHOICE_BAND); MovesWithPP({MOVE_PURSUIT, 1}, {MOVE_CELEBRATE, 10}, {MOVE_WATER_GUN, 10}, {MOVE_SCRATCH, 10}); }
         OPPONENT(SPECIES_WYNAUT);
         OPPONENT(SPECIES_WOBBUFFET);
     } WHEN {
@@ -606,7 +606,7 @@ SINGLE_BATTLE_TEST("Pursuit attacks a switching foe and switchin is correctly st
             case 4:
                 SEND_IN_MESSAGE("Venipede");
                 break;
-        }  
+        }
     }
 }
 
@@ -670,6 +670,26 @@ SINGLE_BATTLE_TEST("Pursuit user faints to Life Orb and target still switches ou
     } THEN {
         EXPECT_EQ(player->species, SPECIES_VOLTORB);
         EXPECT_EQ(opponent->species, SPECIES_VOLTORB);
+    }
+}
+
+DOUBLE_BATTLE_TEST("Pursuit user switches out due to Red Card and partner's switch is cancelled if switching to same Pokémon")
+{
+    GIVEN {
+        ASSUME(GetItemHoldEffect(ITEM_RED_CARD) == HOLD_EFFECT_RED_CARD);
+        PLAYER(SPECIES_WOBBUFFET);
+        PLAYER(SPECIES_WYNAUT);
+        PLAYER(SPECIES_ARCEUS);
+        OPPONENT(SPECIES_WYNAUT) { Item(ITEM_RED_CARD); }
+        OPPONENT(SPECIES_WOBBUFFET);
+        OPPONENT(SPECIES_ARCEUS);
+    } WHEN {
+        TURN { SWITCH(opponentLeft, 2); SWITCH(playerRight, 2); MOVE(playerLeft, MOVE_PURSUIT, target: opponentLeft); }
+    } THEN {
+        // playerLeft switches to Arceus
+        EXPECT_EQ(playerLeft->species, SPECIES_ARCEUS);
+        // playerRight has their switch cancelled
+        EXPECT_EQ(playerRight->species, SPECIES_WYNAUT);
     }
 }
 
