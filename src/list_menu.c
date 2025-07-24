@@ -553,6 +553,10 @@ static u8 ListMenuInitInternal(struct ListMenuTemplate *listMenuTemplate, u16 sc
     list->unk_1D = 0;
     list->taskId = TASK_NONE;
     list->unk_1F = 0;
+    
+    // if no move cursor func provided, use the default so sound effects always play
+    if (list->template.moveCursorFunc == NULL)
+        list->template.moveCursorFunc = ListMenuDefaultCursorMoveFunc;
 
     gListMenuOverride.cursorPal = list->template.cursorPal;
     gListMenuOverride.fillValue = list->template.fillValue;
